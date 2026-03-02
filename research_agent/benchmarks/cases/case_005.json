@@ -1,0 +1,30 @@
+{
+  "id": "case_005",
+  "paper": {
+    "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+    "arxiv_id": "2106.09685",
+    "year": 2021,
+    "venue": "ICLR 2022",
+    "authors": ["Edward Hu", "Yelong Shen", "Phillip Wallis", "Zeyuan Allen-Zhu", "Yuanzhi Li", "Shean Wang", "Lu Wang", "Weizhu Chen"]
+  },
+  "problem_statement": "Fine-tuning large pretrained models (e.g., GPT-3 with 175B parameters) on downstream tasks requires updating and storing all parameters for each task, which is prohibitively expensive in memory and storage. Existing parameter-efficient approaches like adapters add inference latency by inserting sequential bottleneck layers, and prompt tuning is hard to optimize and reduces usable sequence length. We need a method that: (1) adds no inference latency, (2) uses very few trainable parameters, (3) can be merged back into the original weights, and (4) matches full fine-tuning performance. How?",
+  "known_ingredients": [
+    "Large pretrained models have highly overparameterized weight matrices",
+    "The weight change during fine-tuning (delta_W) has been observed to have low intrinsic rank — you don't need all dimensions to capture task-specific adaptation",
+    "Matrix factorization: any rank-r matrix can be written as the product of two smaller matrices (A: d×r and B: r×d where r << d)",
+    "Adapter layers insert small trainable bottleneck modules between frozen layers, but add sequential computation at inference",
+    "At inference time, if an additive modification to weights is a simple matrix, it can be merged into the original weight matrix with no latency cost",
+    "Freezing the pretrained weights and only training a small number of new parameters reduces storage from one full model per task to one small delta per task"
+  ],
+  "key_insight": "Since the fine-tuning weight update delta_W is low-rank, represent it directly as a product of two small matrices (B×A where A is d×r and B is r×d with r=4 or 8). Freeze all original weights, only train A and B. At inference, merge W + BA back into a single weight matrix — zero added latency. This gives parameter-efficient fine-tuning that matches full fine-tuning quality with ~0.01% trainable parameters and no inference overhead.",
+  "insight_components": [
+    "Represent the weight update as an explicit low-rank factorization BA added to the frozen pretrained weight",
+    "Only train the two small factor matrices (A and B), freeze everything else",
+    "At deployment, merge W+BA into a single matrix eliminating any inference overhead",
+    "The rank r can be very small (4-8) because fine-tuning changes are intrinsically low-rank"
+  ],
+  "difficulty": "easy",
+  "difficulty_rationale": "The ingredients almost spell it out: low-rank weight changes + matrix factorization + additive merging. The connection is fairly direct once you see it, though the 'merge at inference' insight for zero latency is the key practical contribution.",
+  "domain": "efficient fine-tuning",
+  "contamination_risk": "high"
+}

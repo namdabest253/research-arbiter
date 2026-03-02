@@ -1,0 +1,40 @@
+{
+  "id": "case_012",
+  "paper": {
+    "title": "RLP: Reinforcement as a Pretraining Objective",
+    "arxiv_id": "2510.01265",
+    "year": 2025,
+    "venue": "ICLR 2026",
+    "authors": ["Ali Hatamizadeh", "Syeda Nahida Akter", "Shrimai Prabhumoye", "Jan Kautz", "Mostofa Patwary", "Mohammad Shoeybi", "Bryan Catanzaro", "Yejin Choi"]
+  },
+  "problem_statement": "The standard training pipeline for large reasoning models uses next-token prediction (NTP) during pretraining, followed by supervised fine-tuning, and finally reinforcement learning (RL) as the last phase. RL from human/verifiable feedback is effective for reasoning, but requires task-specific checkers or curated solutions to compute rewards — limiting its applicability to specific domains. Pretraining with NTP alone does not explicitly reward reasoning or integrate world knowledge during learning; it only maximizes likelihood of observed tokens. The question: Can we bring the core benefit of RL — incentivizing useful thinking — into pretraining itself, applied to general web-scale text without any task-specific verifiers?",
+  "known_ingredients": [
+    "Next-token prediction (NTP) maximizes the log-likelihood of the next token given a context, with no mechanism to reward or incentivize internal reasoning before predicting",
+    "Chain-of-thought (CoT) prompting demonstrates that explicit reasoning steps before answering dramatically improves performance on complex tasks — but CoT is only useful if the model generates actually helpful reasoning, not just plausible-sounding filler",
+    "RLHF and RLVR work by computing reward signals from external verifiers (human preferences, correctness checkers), but these require task-specific setup for each domain and cannot be applied to generic pretraining text",
+    "Information gain (mutual information) is a task-agnostic measure of how useful one variable is for predicting another: IG(CoT → next token) = log P(next_token | context, CoT) - log P(next_token | context alone)",
+    "EMA (exponential moving average) of model parameters provides a slowly-changing 'lagged' baseline version of the model — widely used in self-supervised learning (e.g., BYOL, MoCo) to provide a stable reference without a separate model",
+    "GRPO (Group Relative Policy Optimization) is a variant of PPO that uses group-sampled rewards for variance reduction without requiring a learned value function — used in recent reasoning model training",
+    "Reward hacking in RL occurs when the agent finds ways to maximize the reward signal without actually improving the target behavior — a known risk when the reward is computed from the model itself"
+  ],
+  "key_insight": "Use information gain as a verifier-free, dense reward signal during pretraining: treat generating a chain-of-thought before predicting each next token as an RL action, and reward it based on how much the CoT improves the log-likelihood of the actual observed next token compared to a no-think baseline. The no-think baseline is provided by an EMA teacher (a slowly-updated copy of the model), which prevents reward hacking. This reward is available at every token position in ordinary web text — no task-specific verifier needed. The thought policy and predictor share the same model weights; gradients are applied only to the thought tokens using a GRPO-style clipped surrogate. This brings RL-style exploration and reasoning incentivization into pretraining on arbitrary text, earlier and more efficiently than post-training RL.",
+  "insight_components": [
+    "Information gain (log P(next_token | context, CoT) − log P(next_token | context)) is a self-contained, verifier-free reward that measures whether a CoT is genuinely useful for predicting the next token — not just coherent-sounding",
+    "An EMA lagged teacher provides the 'no-think' baseline counterfactual, avoiding the degenerate case where the model compares to itself (which collapses the reward to zero) while remaining informative enough to detect improvement",
+    "The reward signal applies to every token in ordinary pretraining text — no special data curation or task-specific verifiers — making it as broadly applicable as NTP itself",
+    "Gradients are applied only to the thought tokens (not the predicted token or baseline), using a GRPO-style clipped surrogate for stability; the predictor and thought policy share weights"
+  ],
+  "difficulty": "hard",
+  "difficulty_rationale": "The ingredients give the right building blocks (NTP, CoT, IG, EMA, GRPO) but the specific combination is non-obvious. The key jumps are: (1) using log-likelihood ratio as the reward rather than external verification — most would default to verifiers; (2) using an EMA teacher as the no-think baseline to prevent reward hacking — without this the system degenerates; (3) applying gradients only to thought tokens, not predictions — the training target distinction is subtle. All three must be combined correctly.",
+  "domain": "LLM training objectives",
+  "contamination_risk": "low",
+  "contamination_tier": 1,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Not recognized — paper published September 2025, after model training cutoff.",
+    "q2_proposed_approach_summary": "Probe proposed outcome reward models, self-supervised auxiliary objectives, process supervision with general signals, and preference learning on pretraining data. Did NOT propose the actual insight: information gain (log P(next_token | context, CoT) − log P(next_token | context)) as a verifier-free dense reward, using an EMA teacher for the no-think baseline, applying GRPO only to thought tokens.",
+    "tier_assigned_by_probe": 1,
+    "tier_assigned_by_human": 1,
+    "human_tier_rationale": "Paper published September 2025, definitively post-cutoff. Probe proposes completely different approaches — the specific EMA-teacher information-gain reward with GRPO on thought tokens is not guessable. Clean benchmark case.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

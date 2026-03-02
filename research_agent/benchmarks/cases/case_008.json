@@ -1,0 +1,40 @@
+{
+  "id": "case_008",
+  "paper": {
+    "title": "1000 Layer Networks for Self-Supervised RL: Scaling Depth Can Enable New Goal-Reaching Capabilities",
+    "arxiv_id": "2503.14858",
+    "year": 2025,
+    "venue": "NeurIPS 2025 (Best Paper)",
+    "authors": ["Kevin Wang", "Ishaan Javali", "Michał Bortkiewicz", "Tomasz Trzciński", "Benjamin Eysenbach"]
+  },
+  "problem_statement": "Scaling model size has driven transformative breakthroughs in language (GPT, Llama) and vision (ViT, CLIP), but comparable scaling success has been absent in reinforcement learning (RL). Standard RL networks for continuous control tasks use shallow MLPs (2-5 layers), and prior attempts to scale RL by increasing network size have shown only marginal improvements or even degradation. The argument often given is that RL's reward signal is too sparse — very few bits of feedback per parameter update — making large models hard to train. Despite researchers trying wider networks, more layers, and other architectural changes, RL stubbornly refuses to scale like language/vision. What is the missing ingredient that makes scaling work in language/vision but not RL, and what specific change is needed to unlock RL scaling?",
+  "known_ingredients": [
+    "In NLP and CV, scaling works via self-supervised objectives (BERT, ViT, contrastive learning) — models learn from abundant self-supervised signal, not sparse external rewards",
+    "Self-supervised RL (contrastive RL, CRL) bypasses external rewards by learning goal-conditioned policies through a contrastive InfoNCE objective: classify whether (state, action) leads to a given goal using a cross-entropy-like loss",
+    "InfoNCE is mathematically a cross-entropy objective over trajectory-goal pairs — closely analogous to the cross-entropy objectives that power scaling in NLP and vision",
+    "Prior RL scaling attempts focused on increasing network WIDTH (number of neurons per layer), finding limited returns and sometimes degraded performance",
+    "Prior RL scaling experiments using residual connections reported minimal benefit from additional depth (typically tested up to 4 layers with residual blocks)",
+    "Residual connections (ResNet-style, He et al. 2015) are the standard technique for training very deep networks: gradient shortcuts prevent vanishing gradients, LayerNorm prevents activation explosion, and Swish activations provide smoothly non-linear gradients",
+    "GPU-accelerated RL simulators (Brax, MJX via JAX) can generate millions of environment steps per second, providing abundant training data at scale comparable to pretraining corpora"
+  ],
+  "key_insight": "The missing ingredient is DEPTH. Prior RL scaling failed because it focused on width; depth (up to 1024 layers) is the correct scaling axis for self-supervised RL. The critical combination is: (1) self-supervised RL (contrastive RL with InfoNCE) as the objective — because this cross-entropy-like loss provides dense self-supervised signal analogous to language modeling; (2) ResNet-style deep networks (residual connections + LayerNorm + Swish) to enable stable training of 1024-layer networks; (3) GPU-accelerated environments for abundant data. Performance gains are not gradual — they appear as discontinuous jumps at critical depth thresholds (e.g., 16 layers enables walking upright, 256 layers enables vaulting over walls), producing qualitatively new behaviors impossible at lower depths.",
+  "insight_components": [
+    "Self-supervised RL (contrastive RL with InfoNCE cross-entropy objective) is the right substrate for scaling — it provides dense training signal analogous to the self-supervised objectives that power language/vision scaling",
+    "Depth (not width) is the critical scaling axis: scaling width has limited returns, but scaling depth from 4 to 1024 layers produces 2x-50x performance improvements",
+    "Standard deep-learning stabilization techniques (residual connections + LayerNorm + Swish) are what makes 1000-layer RL networks trainable — without them, depth fails",
+    "Performance gains emerge discontinuously at critical depth thresholds, not gradually — deeper networks unlock qualitatively new behaviors (locomotion modes) that are simply inaccessible at lower depths"
+  ],
+  "difficulty": "hard",
+  "difficulty_rationale": "The ingredients contain multiple interacting factors (self-supervised RL, depth vs. width, residual stabilization, GPU data). The counterintuitive insight has two parts: (1) depth, not width, is the right scaling axis (opposite of what most would try first), and (2) the specific self-supervised contrastive objective is what makes depth scaling possible. Combining these requires connecting the InfoNCE cross-entropy objective to the scaling success in NLP as a theoretical explanation, not just an empirical recipe.",
+  "domain": "reinforcement learning",
+  "contamination_risk": "medium",
+  "contamination_tier": 1,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Not recognized by title; model unfamiliar with specific paper.",
+    "q2_proposed_approach_summary": "Probe proposed auxiliary objectives for denser rewards, modular architectures, improved credit assignment mechanisms, and curriculum learning. Did NOT propose the actual insight: depth (not width) scaling combined with self-supervised RL (contrastive RL + InfoNCE objective) + GPU-accelerated environments.",
+    "tier_assigned_by_probe": 1,
+    "tier_assigned_by_human": 1,
+    "human_tier_rationale": "The probe went in completely the wrong direction (credit assignment, auxiliary tasks) rather than the actual insight (depth scaling + self-supervised RL substrate). The counterintuitive nature of the depth-not-width insight and the specific self-supervised RL framing are not guessable from the problem statement alone.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "case_010",
+  "paper": {
+    "title": "Why Diffusion Models Don't Memorize: The Role of Implicit Dynamical Regularization in Training",
+    "arxiv_id": "2505.17638",
+    "year": 2025,
+    "venue": "NeurIPS 2025 (Best Paper)",
+    "authors": ["Tony Bonnaire", "Raphaël Urfin", "Giulio Biroli", "Marc Mézard"]
+  },
+  "problem_statement": "Diffusion models are theoretically expected to memorize when sufficiently overparameterized: a model that perfectly minimizes the score-matching loss converges to the empirical score, which provably reproduces training samples exactly at generation time. Memorization should therefore occur whenever the model has enough capacity (n < n*(p), where n is training set size and p is model capacity). Yet in practice, diffusion models generalize well even with moderate training data and overparameterized models — memorization only appears with very small datasets. The naive fix (regularization, dropout, weight decay) doesn't explain this empirically, since generalization is observed even without explicit regularization. What prevents memorization in practice, and why does the generalization-to-memorization transition only happen at unexpectedly small dataset sizes?",
+  "known_ingredients": [
+    "A diffusion model minimizing score-matching loss to convergence learns the empirical score smem(x,t), which is provably known to exactly reproduce training samples — convergence implies memorization when n < n*(p)",
+    "In practice, diffusion models are always trained with early stopping (training terminates well before convergence to zero loss), but the reason early stopping works is not well understood",
+    "Neural networks exhibit spectral bias (also called frequency principle): gradient descent learns low-frequency functions first and high-frequency components much later during training",
+    "The empirical score smem(x,t) has a low-frequency component similar to the true population score sgen(x,t) and a high-frequency component encoding dataset-specific memorization",
+    "Sample quality (FID) improves quickly during early training and then plateaus — this observation is consistent across different dataset sizes n",
+    "Memorization fraction fmem starts near 0 during early training and only rises during extended training — but the timing of when fmem begins to rise varies with dataset size n",
+    "The critical training set threshold n*(p) (above which memorization disappears at infinite training time) scales much smaller than the exponential bound that theory predicts"
+  ],
+  "key_insight": "Two distinct timescales exist in diffusion model training: τ_gen (the training time when good generation quality is first achieved) and τ_mem (the training time when memorization begins to emerge). Due to spectral bias of neural networks, the model first learns the low-frequency components of the score (these match the population score → good generalization) before it learns the high-frequency components (these encode the training samples → memorization). Crucially, τ_gen is approximately independent of dataset size n, while τ_mem scales linearly with n. This creates a generalization window [τ_gen, τ_mem] that widens linearly with n. Practitioners always stop training within this window in practice, explaining generalization even without explicit regularization. This is 'implicit dynamical regularization': the training dynamics naturally avoid memorization when stopped at any point in the generalization window.",
+  "insight_components": [
+    "Spectral bias causes a strict ordering: low-frequency (population-like) score components are learned before high-frequency (memorization-inducing) components, creating sequential phases",
+    "τ_gen is approximately constant with respect to n (achieving good generation does not require more training as dataset grows), while τ_mem scales linearly with n (memorization takes proportionally longer with larger datasets)",
+    "The linear scaling τ_mem ∝ n creates a growing generalization window — larger datasets are always safer from memorization at the same training budget, which matches empirical intuition about data-rich regimes",
+    "This is 'implicit dynamical regularization' from training dynamics alone: no explicit regularizer is needed; the temporal ordering of what gets learned provides the regularization effect"
+  ],
+  "difficulty": "hard",
+  "difficulty_rationale": "The ingredients describe spectral bias, early stopping, and the empirical observation that memorization appears late. The counterintuitive insight requires connecting (1) spectral bias → sequential learning order → two distinct timescales; (2) the differential dependence of those timescales on n (τ_gen constant, τ_mem linear); (3) why this constitutes an 'implicit regularizer.' The mathematical relationship τ_mem ∝ n is not obvious from the ingredients — it requires insight into why the high-frequency part of the empirical score becomes harder to learn as n grows.",
+  "domain": "generative model theory",
+  "contamination_risk": "medium",
+  "contamination_tier": 2,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Aware of theoretical analysis of generalization in diffusion models; knows 'implicit dynamical regularization' is a concept in training dynamics.",
+    "q2_proposed_approach_summary": "Probe proposed that the iterative denoising process acts as implicit regularization, noise injection creates data augmentation, and multi-step loss prevents sharp memorization of individuals. Did NOT propose the actual insight: two distinct timescales (τ_gen constant, τ_mem ∝ n), spectral bias as the mechanism for sequential timescale emergence, and the specific linear scaling law τ_mem ∝ n.",
+    "tier_assigned_by_probe": 2,
+    "tier_assigned_by_human": 2,
+    "human_tier_rationale": "The probe proposes plausible but incorrect mechanisms (noise injection as regularization) rather than the actual insight (spectral bias → two timescales → τ_mem ∝ n). The specific mathematical relationship and its consequences are not recoverable from the ingredients. Legitimate Tier 2 case.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

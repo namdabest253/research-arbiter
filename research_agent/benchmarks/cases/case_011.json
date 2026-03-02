@@ -1,0 +1,40 @@
+{
+  "id": "case_011",
+  "paper": {
+    "title": "Superposition Yields Robust Neural Scaling",
+    "arxiv_id": "2505.10465",
+    "year": 2025,
+    "venue": "NeurIPS 2025 (Runner-Up)",
+    "authors": ["Yizhou Liu", "Ziming Liu", "Jeff Gore"]
+  },
+  "problem_statement": "Neural scaling laws — where model loss decreases as a power law with model size — are remarkably robust: they appear across architectures, tasks, and datasets with power-law exponents consistently near -1. Existing theoretical explanations from statistical learning theory predict power-law scaling only if the underlying data feature distribution is itself a power law (e.g., Zipf's law for word frequencies). But real data doesn't always follow a power law, and scaling laws appear even in settings where this assumption seems questionable. Furthermore, the -1 exponent is strangely consistent across very different setups. What is the actual mechanism behind neural scaling laws that makes them so universal, and why is the exponent close to -1?",
+  "known_ingredients": [
+    "Neural scaling laws: loss decreases approximately as L ∝ model_size^(-α) where α ≈ 1 across many LLM families, architectures, and tasks",
+    "Standard theoretical explanations (function approximation, skill learning) predict power-law scaling only when data feature frequencies follow a power law — a strong distributional assumption",
+    "Superposition (from Anthropic's mechanistic interpretability work): neural networks can represent more features than their hidden dimension by storing features as overlapping (non-orthogonal) directions in activation space",
+    "Superposition is only possible when features are sparse: when features rarely co-activate, a ReLU can correct for the interference between overlapping representations",
+    "Weight decay controls the degree of superposition: strong weight decay pushes representations toward orthogonality (weak superposition), while weak weight decay allows many overlapping features (strong superposition)",
+    "Weak superposition: only the top-m most frequent features are well-represented (where m = model dimension); loss comes from ignoring the remaining features",
+    "Strong superposition: all features are represented but with overlapping directions; loss comes from geometric interference between representation vectors when they decode"
+  ],
+  "key_insight": "When models operate in the strong-superposition regime (which actual LLMs do, as verified empirically), the dominant source of loss is geometric interference between the overlapping representation vectors — not from which features are ignored. The key mathematical insight is that in the strong-superposition regime, this geometric interference scales as 1/(model_dimension) regardless of the specific feature frequency distribution. This explains why scaling laws are robust: the -1 exponent is a geometric property of superposed representations, not a property of the data distribution. Scaling works because wider models can accommodate more features with less geometric interference, and this relationship is universal across data distributions.",
+  "insight_components": [
+    "LLMs empirically operate in the strong superposition regime (not weak): they represent far more features than their hidden dimension, with all representation vectors having non-zero norms",
+    "In the strong-superposition regime, loss is dominated by geometric interference between representation vectors — not by which features are excluded (as in the weak regime)",
+    "The geometric interference in strong superposition scales as 1/m (where m = model dimension) for a broad class of feature frequency distributions — this is what makes the exponent ≈ -1 universal",
+    "This explains why scaling laws persist even when feature frequencies are not power-law distributed: the mechanism (geometric superposition interference) is distribution-independent"
+  ],
+  "difficulty": "hard",
+  "difficulty_rationale": "The ingredients describe weak superposition and its limitations, plus the two types of superposition regimes. The key insight requires: (1) recognizing that LLMs are in the strong-superposition regime (not obvious from the ingredients); (2) deriving that geometric interference scales as 1/m independent of data distribution (requires mathematical reasoning about vector geometry in the superposition toy model); (3) connecting this to why scaling is universal. This requires combining mechanistic interpretability knowledge with scaling law phenomenology in a non-trivial way.",
+  "domain": "neural scaling / mechanistic interpretability",
+  "contamination_risk": "medium",
+  "contamination_tier": 2,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Title not recognized; but knows about Anthropic's superposition work and neural scaling laws separately.",
+    "q2_proposed_approach_summary": "Probe proposed that neural networks may implicitly create power-law structure through learning dynamics, that gradient descent is biased toward power-law solutions, or that superposition of features creates internal structure. Did NOT propose the specific insight: strong-superposition regime dominates in LLMs, geometric interference scales as 1/model_dimension independently of data distribution, and this is the source of the universal -1 exponent.",
+    "tier_assigned_by_probe": 2,
+    "tier_assigned_by_human": 2,
+    "human_tier_rationale": "The probe is aware of superposition (the ingredient that gives the title away) and neural scaling, but cannot make the specific connection between geometric interference in strong-superposition regime and the -1 scaling exponent. The key mathematical insight (1/m scaling from vector geometry, not from data statistics) is not recoverable from the ingredients alone without the paper.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

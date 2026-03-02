@@ -1,0 +1,30 @@
+{
+  "id": "case_003",
+  "paper": {
+    "title": "Denoising Diffusion Probabilistic Models",
+    "arxiv_id": "2006.11239",
+    "year": 2020,
+    "venue": "NeurIPS 2020",
+    "authors": ["Jonathan Ho", "Ajay Jain", "Pieter Abbeel"]
+  },
+  "problem_statement": "Score-based generative models (learning the gradient of the log density) show theoretical promise but produce poor sample quality compared to GANs. The forward process of gradually adding Gaussian noise and the reverse process of denoising are mathematically well-understood, but previous implementations underperform. How can we make diffusion-based generation actually competitive with GANs on image quality while maintaining the stable training and mode coverage advantages?",
+  "known_ingredients": [
+    "The forward diffusion process gradually adds Gaussian noise over T timesteps until the data becomes pure noise",
+    "The reverse process can be parameterized as a neural network predicting the mean (and optionally variance) of each denoising step",
+    "Variational lower bound (VLB) on log-likelihood gives a principled training objective but the resulting loss is noisy and hard to optimize",
+    "Score matching (predicting the gradient of log p) is an alternative training objective that avoids normalizing constants",
+    "U-Net architectures with attention have proven effective for image-to-image tasks",
+    "The noise added at each step can be parameterized differently: predict the mean, predict the original image, or predict the noise itself"
+  ],
+  "key_insight": "Instead of training the network to predict the denoised mean (which the VLB objective suggests), reparameterize to predict the noise epsilon that was added. This simple change to the training target — predicting noise instead of signal — dramatically improves sample quality. The resulting simplified objective (MSE between predicted and actual noise) drops the VLB weighting terms, which turns out to be equivalent to a reweighted variational bound that emphasizes larger noise levels. This noise-prediction parameterization combined with a specific linear beta schedule makes diffusion models competitive with GANs.",
+  "insight_components": [
+    "Reparameterize the denoising network to predict the added noise (epsilon) rather than the denoised mean",
+    "The simplified MSE loss on noise prediction drops VLB weighting terms, which empirically improves quality",
+    "This simplified objective corresponds to a reweighted variational bound emphasizing larger noise scales",
+    "The linear noise schedule choice matters significantly for quality"
+  ],
+  "difficulty": "hard",
+  "difficulty_rationale": "The ingredients list noise prediction as one of several parameterization options with no indication it's special. The insight that DROPPING the theoretically-motivated VLB weights improves quality is counterintuitive — it goes against the mathematical framing. This requires the kind of 'try the simple thing that theory says shouldn't work' insight.",
+  "domain": "diffusion models",
+  "contamination_risk": "high"
+}

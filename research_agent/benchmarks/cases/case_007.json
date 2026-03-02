@@ -1,0 +1,40 @@
+{
+  "id": "case_007",
+  "paper": {
+    "title": "Roll the dice & look before you leap: Going beyond the creative limits of next-token prediction",
+    "arxiv_id": "2504.15266",
+    "year": 2025,
+    "venue": "ICML 2025 (Outstanding Paper)",
+    "authors": ["Vaishnavh Nagarajan", "Chen Henry Wu", "Charles Ding", "Aditi Raghunathan"]
+  },
+  "problem_statement": "Language models trained with next-token prediction (NTP) produce outputs that are correct but not truly creative or diverse on open-ended tasks. Consider tasks requiring a 'leap of thought' — generating a novel word analogy, designing a math problem with a surprising solution, or constructing a knowledge-graph path connecting two distant concepts. Even with temperature sampling, LLMs produce repetitive outputs: they cover the same ideas repeatedly rather than generating diverse, original ones. We want to understand WHY NTP fails at this kind of task and propose a better training/inference approach that enables genuine diversity and originality. What is the fundamental computational limitation, and how do we overcome it?",
+  "known_ingredients": [
+    "Next-token prediction (NTP) is myopic: each token is predicted from the immediately preceding prefix, with no mechanism to plan far-ahead globally before committing to local choices",
+    "Creative 'leap-of-thought' tasks require an implicit stochastic planning step that makes multiple coordinated global decisions simultaneously — e.g., choosing which two concepts to connect — before generating the output tokens",
+    "Temperature sampling at the output layer works by scaling the softmax distribution: it mixes all possible creative 'leaps' into one probability distribution, forcing the model to simultaneously hedge over all directions at each token",
+    "Multi-token prediction objectives (teacherless training, diffusion models) have been proposed for improved quality; they optimize the joint probability of multiple tokens rather than one-at-a-time",
+    "Input-level diversity (providing varied seed prompts/prefixes) has been shown to increase diversity in language model outputs",
+    "A model conditioned on a specific random seed at input is committed to one creative direction from the start, rather than marginalizing over all directions at output",
+    "Self-supervised training on controllable algorithmic tasks (where originality and diversity can be objectively measured) allows precise isolation of what training objectives can and cannot learn"
+  ],
+  "key_insight": "Two complementary fixes address the creative limitation of NTP: (1) Multi-token learning (teacherless training or diffusion) significantly improves algorithmic creativity because it captures global higher-order patterns across multiple positions simultaneously, which NTP cannot access from local next-token statistics alone. (2) Seed-conditioning (prepending a random token sequence at input before generation) works as well as or better than temperature sampling at eliciting diversity — because it commits the model to a single creative 'leap' at the input rather than forcing the model to marginalize over all possible leaps at each output token. The key insight is that diversity should be induced at the INPUT level (through seed conditioning), not at the output level (through temperature), because the former picks one direction while the latter tries to average over all directions simultaneously.",
+  "insight_components": [
+    "NTP's failure on creative tasks is structural: it cannot learn global higher-order patterns because training conditions only on immediately preceding tokens, missing the coordination between distant token choices",
+    "Multi-token objectives (teacherless training or diffusion) succeed precisely because they can capture co-occurrence patterns across the full sequence, enabling the model to learn the implicit leap-of-thought structure",
+    "Output-level temperature sampling forces the model to 'average' over many creative leaps simultaneously, creating cognitive overload and producing mediocre-diversity outputs",
+    "Input-level seed conditioning (prepending a random prefix) sidesteps this by committing to one creative direction per seed, allowing the model to execute a single coherent leap rather than averaging over all leaps"
+  ],
+  "difficulty": "medium",
+  "difficulty_rationale": "The ingredients point toward both the problem (myopic NTP) and alternative objectives (multi-token, diffusion), but the specific insight about input-level vs. output-level randomness is non-obvious. Most approaches would focus on better output sampling or model size, not on switching from output noise to input noise as the primary diversity mechanism.",
+  "domain": "language modeling / training objectives",
+  "contamination_risk": "medium",
+  "contamination_tier": 1,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Not recognized by title; model unfamiliar with specific paper.",
+    "q2_proposed_approach_summary": "Probe proposed diverse decoding, beam search variants, learning-rate schedules, and altered training objectives rewarding novelty. Did NOT propose the actual insights: (1) multi-token teacherless/diffusion training outperforms NTP on creative tasks, (2) seed-conditioning at input works better than temperature sampling at output.",
+    "tier_assigned_by_probe": 1,
+    "tier_assigned_by_human": 1,
+    "human_tier_rationale": "Probe proposed standard approaches (diverse decoding, altered objectives) that are clearly wrong directions — the actual insight is counterintuitive (input noise rather than output noise for diversity). Clean benchmark case.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "case_001",
+  "paper": {
+    "title": "Classifier-Free Diffusion Guidance",
+    "arxiv_id": "2207.12598",
+    "year": 2022,
+    "venue": "NeurIPS Workshop",
+    "authors": ["Jonathan Ho", "Tim Salimans"]
+  },
+  "problem_statement": "Conditional diffusion models can be guided using a separately trained classifier (classifier guidance), but this requires training an additional model on noisy data and introduces a trade-off between sample quality and diversity. We want conditional generation with strong adherence to the conditioning signal WITHOUT needing a separate classifier. How can we achieve classifier-like guidance using only the diffusion model itself?",
+  "known_ingredients": [
+    "Classifier guidance works by adding the gradient of a classifier's log-probability to the diffusion score function at each sampling step",
+    "A conditional diffusion model p(x|c) and an unconditional model p(x) are related by Bayes' rule: the classifier gradient is proportional to the difference between conditional and unconditional scores",
+    "Training a separate classifier on noisy data at every noise level is expensive and introduces its own failure modes",
+    "Conditional and unconditional diffusion models can be trained as a single neural network by randomly dropping the conditioning signal during training",
+    "The guidance scale parameter in classifier guidance controls the quality-diversity trade-off"
+  ],
+  "key_insight": "You don't need a separate classifier at all. Since the classifier gradient is proportional to (conditional score - unconditional score), you can directly compute guidance by taking the difference between the conditional and unconditional predictions of a single model trained with random conditioning dropout. Extrapolating this difference with a scale factor > 1 gives classifier-free guidance that matches or exceeds classifier guidance quality.",
+  "insight_components": [
+    "The classifier can be implicitly represented as the difference between conditional and unconditional diffusion model scores",
+    "A single model can serve as both conditional and unconditional by dropping conditioning during training",
+    "Extrapolating the difference (scale > 1) amplifies the conditioning signal analogously to classifier guidance temperature"
+  ],
+  "difficulty": "easy",
+  "difficulty_rationale": "The mathematical relationship is almost directly stated in the ingredients (Bayes' rule connection). The key leap is realizing you can use the same model for both terms and then extrapolate.",
+  "domain": "diffusion models",
+  "contamination_risk": "high"
+}

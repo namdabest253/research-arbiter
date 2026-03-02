@@ -1,0 +1,30 @@
+{
+  "id": "case_002",
+  "paper": {
+    "title": "Finite Scalar Quantization: VQ-VAE Made Simple",
+    "arxiv_id": "2309.15505",
+    "year": 2023,
+    "venue": "ICLR 2024",
+    "authors": ["Fabian Mentzer", "David Minnen", "Eirikur Agustsson", "Michael Tschannen"]
+  },
+  "problem_statement": "Vector quantization in VQ-VAEs suffers from codebook collapse (many codes go unused), requires complex training tricks (EMA updates, codebook reset, commitment losses), and the straight-through estimator introduces gradient bias. We want discrete representations for generative modeling but the quantization step is fragile and hard to train. Is there a simpler way to get discrete latent codes that avoids these problems entirely?",
+  "known_ingredients": [
+    "VQ-VAE uses a learned codebook of embedding vectors and maps encoder outputs to the nearest codebook entry",
+    "The straight-through estimator copies gradients through the non-differentiable argmin operation, introducing bias",
+    "Codebook collapse means many codebook entries are never selected, wasting capacity",
+    "Scalar quantization (rounding real numbers to integers) is a well-known signal processing technique",
+    "Product quantization decomposes a vector into independent sub-vectors and quantizes each separately",
+    "The Gumbel-Softmax trick provides another way to handle discrete variables but adds temperature scheduling complexity"
+  ],
+  "key_insight": "Instead of learning a codebook and doing vector quantization, simply round each scalar dimension of the encoder output to the nearest integer within a fixed range (e.g., round to {0,1,2,3,4} per dimension). This 'finite scalar quantization' gives discrete codes with zero codebook collapse (all levels are structurally available), needs no commitment loss or EMA, and the straight-through estimator on simple rounding has much less gradient bias than on argmin-to-codebook. It matches or beats VQ-VAE quality with dramatically simpler training.",
+  "insight_components": [
+    "Replace vector quantization with per-dimension scalar rounding to fixed integer levels",
+    "This eliminates codebook collapse by construction since there is no learned codebook",
+    "The straight-through estimator on scalar rounding is simpler and lower-bias than on vector argmin",
+    "The effective codebook size is the product of levels across dimensions, giving exponentially large implicit codebooks"
+  ],
+  "difficulty": "medium",
+  "difficulty_rationale": "The ingredients mention scalar quantization and product quantization separately, but connecting them to replace VQ entirely — and realizing this solves codebook collapse by construction — requires a non-obvious reframing of the problem.",
+  "domain": "representation learning",
+  "contamination_risk": "high"
+}

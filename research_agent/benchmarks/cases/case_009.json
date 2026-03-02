@@ -1,0 +1,41 @@
+{
+  "id": "case_009",
+  "paper": {
+    "title": "Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free",
+    "arxiv_id": "2505.06708",
+    "year": 2025,
+    "venue": "NeurIPS 2025 (Best Paper)",
+    "authors": ["Zihan Qiu", "Zekun Wang", "Bo Zheng", "Zeyu Huang", "Kaiyue Wen", "Songlin Yang", "Rui Men", "Le Yu", "Fei Huang", "Suozhi Huang", "Dayiheng Liu", "Jingren Zhou", "Junyang Lin"]
+  },
+  "problem_statement": "Standard softmax attention in transformer LLMs has two persistent pathologies: (1) 'Attention sinks' — the initial tokens in a sequence receive disproportionately large attention weights (up to 83% in a single layer), wasting attention capacity on uninformative tokens and severely hurting performance on long-context tasks; (2) Training instability — loss spikes occur during training, especially at larger learning rates, limiting the maximum useful learning rate and slowing convergence. These problems have been studied and addressed with separate interventions (StreamingLLM for sinks, gradient clipping for instability), but no single minimal modification fixes both simultaneously. What is the simplest architectural change to softmax attention that addresses both pathologies, and WHY does it work?",
+  "known_ingredients": [
+    "Softmax attention always produces non-negative weights summing to 1 — this non-negativity constraint means the model must attend somewhere, and when no relevant token exists, it concentrates on 'sink' tokens (typically the first token) as a way to 'dump' unwanted attention mass",
+    "Attention sinks prevent effective long-context processing: a head devoting 80% of attention to the first token is effectively blind to the actual context",
+    "Gating mechanisms (sigmoid gates) are well-established in LSTMs, GRUs, and SSMs as a way to modulate information flow and introduce non-linearity and sparsity",
+    "The value projection Wv and output projection Wo in multi-head attention compose as two consecutive linear layers — this is equivalent to a single low-rank linear transformation, limiting expressiveness",
+    "Non-linearity can break this low-rank bottleneck: inserting a non-linear activation between the value and output projections increases expressiveness without adding rank",
+    "Multiple positions for inserting gating exist: after Q, K, V projections, after the SDPA output (before concatenating heads), or after the final output layer",
+    "Head-specific gating (a separate gate per attention head) and head-shared gating (one gate for all heads) are both possible; the two produce different inductive biases",
+    "Sigmoid activation produces values in [0,1] with near-binary sparsity for moderate inputs — this is different from SiLU which can be negative and unbounded"
+  ],
+  "key_insight": "Apply a head-specific sigmoid gate after the Scaled Dot-Product Attention (SDPA) output — i.e., multiply each attention head's output by a sigmoid-activated learnable function of the input. This single change simultaneously fixes both problems through two distinct mechanisms: (1) Non-linearity: the gate breaks the low-rank V→O linear bottleneck, increasing expressiveness; (2) Sparsity: the sigmoid's near-binary outputs introduce input-dependent sparsity into the SDPA output, which eliminates attention sinks — sparse gating effectively 'turns off' the sink heads, since the gate learns to weight them near zero when their attention is uninformative. Training stability improves as a side effect: the gate modulates gradient flow, reducing loss spikes and enabling 25-80% higher maximum learning rates.",
+  "insight_components": [
+    "The optimal gating position is G1 (after SDPA, per head) — not before Q/K/V projections, not after the output layer; this location gives both non-linearity on the low-rank map AND per-head sparsity control",
+    "Head-specific gating is critical: each attention head must have its own gate to independently modulate different heads' contributions; head-shared gating produces smaller gains",
+    "The near-binary sparsity of sigmoid gating (not SiLU, not additive) is what eliminates attention sinks — the gate learns to suppress attention-sink heads rather than redistributing their weights",
+    "Two separate mechanisms (non-linearity on low-rank map, input-dependent sparsity) each contribute independently to performance; both must be present for maximum benefit"
+  ],
+  "difficulty": "medium",
+  "difficulty_rationale": "The ingredients list multiple gating positions and describe both the attention sink problem and the low-rank bottleneck, but connecting the specific position (G1, post-SDPA), granularity (head-specific), and activation (sigmoid) to the two distinct mechanisms (non-linearity + sparsity) is non-obvious. Most would try Q/K/V gating or FFN gating first. The key insight that sparsity kills attention sinks without requiring any change to the softmax distribution is unintuitive.",
+  "domain": "LLM architecture",
+  "contamination_risk": "medium",
+  "contamination_tier": 2,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Recognizes the general direction of gated attention for LLMs; knows gating mechanisms are a known architectural direction.",
+    "q2_proposed_approach_summary": "Probe proposed using GLU-style or sigmoid gates multiplicatively on attention scores, with the intuition that this would reduce attention sinks and improve training stability. General direction matches (gating mechanism), but probe did not identify the critical details: (1) optimal gating position is post-SDPA (G1), not on Q/K/V; (2) head-specific (not head-shared) gating is essential; (3) the sparsity mechanism (not just non-linearity) is what eliminates attention sinks.",
+    "tier_assigned_by_probe": 2,
+    "tier_assigned_by_human": 2,
+    "human_tier_rationale": "The general approach (gating in attention to address sinks and instability) is partially guessable given the ingredients mentioning gating mechanisms. However, the specific combination (G1 position, head-specific, sigmoid sparsity, dual mechanism attribution) represents the actual paper's contribution and is not guessable from ingredients alone.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

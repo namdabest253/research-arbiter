@@ -1,0 +1,40 @@
+{
+  "id": "case_006",
+  "paper": {
+    "title": "Train for the Worst, Plan for the Best: Understanding Token Ordering in Masked Diffusions",
+    "arxiv_id": "2502.06768",
+    "year": 2025,
+    "venue": "ICML 2025 (Outstanding Paper)",
+    "authors": ["Jaeyeon Kim", "Kulin Shah", "Vasilis Kontonis", "Sham Kakade", "Sitan Chen"]
+  },
+  "problem_statement": "Masked Diffusion Models (MDMs) for discrete data (text, proteins, logic puzzles) train on ALL possible masking patterns simultaneously — they must learn to infill any arbitrary subset of tokens. This order-agnostic training makes MDMs solve exponentially more subproblems than autoregressive models (ARMs), which only train left-to-right. Despite this theoretical flexibility to decode in any order at inference, MDMs consistently underperform ARMs on tasks with natural sequential structure. At inference time, MDMs decode tokens by default in random order (vanilla MDM inference). The question is: given that MDMs are already trained and we cannot change training, can we close the performance gap with ARMs purely through smarter inference, and if so, how?",
+  "known_ingredients": [
+    "MDMs train on all possible masking patterns (order-agnostic training): the MDM loss is equivalent to a linear combination of every possible infilling subproblem, so MDMs must learn exponentially more conditional distributions than ARMs",
+    "Order-agnostic training causes performance imbalance: some masking subproblems (e.g., predicting latent tokens from observations) are computationally hard, while others (predicting observations from latents) are easy; the model trains poorly on the hard subproblems",
+    "ARMs train left-to-right (or in a fixed order), which is provably tractable for natural data distributions with a left-to-right causal structure",
+    "At inference time, MDMs are not locked into random order — they can, in principle, unmask tokens in any order, since the trained model can predict any masked token given any partial observation",
+    "An MDM that perfectly solved all masking subproblems could decode in optimal order; the key is that the model's softmax logits for each masked token encode its confidence in predicting that token given the current partial observation",
+    "Vanilla MDM inference randomly selects which tokens to unmask next, meaning it sometimes evaluates poorly-trained (hard) marginals first, compounding errors",
+    "Greedy and confidence-based strategies exist in sequence modeling for prioritizing high-confidence predictions first (e.g., non-autoregressive translation uses similar ideas)"
+  ],
+  "key_insight": "Without any retraining, use the MDM model's own confidence scores (logit entropy or probability mass) to adaptively decide which token to unmask next. At each inference step, choose the currently masked token where the model is most confident (lowest entropy). This greedy confidence-based ordering sidesteps the hard masking subproblems (which were poorly trained) by approaching them only after surrounding context has been filled in, effectively converting the MDM from order-agnostic to order-adaptive. This single inference-time change boosts accuracy on Sudoku from <7% to ~90%, outperforming ARMs with 7x more parameters that were explicitly trained with supervised ordering.",
+  "insight_components": [
+    "The model's own logits at each step contain a confidence signal for each masked token — this signal is informative about which subproblems were well vs. poorly trained",
+    "Greedy confidence-based ordering at inference sidesteps hard subproblems by deferring them until context makes them easier, without any retraining",
+    "MDMs have a structural advantage over ARMs on tasks without a natural left-to-right order: their adaptive inference can discover the 'right' decoding direction at test time, which ARMs are locked out of",
+    "The fix is purely at inference time — training remains unchanged; the improvement comes from exploiting the ordering flexibility MDMs already possess"
+  ],
+  "difficulty": "medium",
+  "difficulty_rationale": "The ingredients reveal the core tension (hard subproblems during training, ordering flexibility at inference) but the connection between confidence scores and ordering isn't explicit. The key jump is realizing the model's own logits encode useful ordering information, and that applying a greedy strategy at inference time exploits the very flexibility MDMs already have.",
+  "domain": "discrete generative models",
+  "contamination_risk": "medium",
+  "contamination_tier": 2,
+  "contamination_probe_results": {
+    "q1_title_recognition": "Not recognized by title; model unfamiliar with specific paper.",
+    "q2_proposed_approach_summary": "Probe spontaneously proposed confidence-based ordering (highest-confidence tokens first) as the primary inference strategy, matching the actual insight direction. Also mentioned attention-pattern-based ordering and domain-specific heuristics.",
+    "tier_assigned_by_probe": 1,
+    "tier_assigned_by_human": 2,
+    "human_tier_rationale": "The probe model proposed confidence-based ordering as its first suggestion without knowing the paper, indicating this direction is guessable from the problem statement alone. Upgraded to Tier 2 (partial) — the mechanism direction is recoverable from ingredients, but the specific implementation details (greedy per-step unmasking, entropy threshold, Sudoku accuracy jump) are not.",
+    "probe_model": "claude-haiku-4-5"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "case_004",
+  "paper": {
+    "title": "[Internal] VQ-VAE v16b Dual-Head with Asymmetric Binary Loss",
+    "arxiv_id": "N/A",
+    "year": 2025,
+    "venue": "Internal project",
+    "authors": ["Project team"]
+  },
+  "problem_statement": "We are training a VQ-VAE for 32x32x32 Minecraft voxel structures using Finite Scalar Quantization (FSQ) with a latent space of 8x8x8x4 quantized to [5,5,5,5] levels. Previous versions have struggled to meet all three quality targets simultaneously: volume ratio within 1.5x of ground truth, building accuracy > 65%, and block recall > 75%. Specifically, versions with skip connections (U-Net style) destroyed latent compression — the decoder bypassed the bottleneck and the latent became useless for generation. Versions without skip connections had poor reconstruction. A single-head decoder predicting all 3717 block types at once struggles because ~80% of voxels are air, making it too conservative — it under-predicts structure to minimize loss. How do we get high reconstruction quality AND high recall while preserving a meaningful latent space?",
+  "known_ingredients": [
+    "Skip connections in U-Net decoders allow high-frequency detail to bypass the bottleneck, giving good reconstruction but empty/meaningless latent codes",
+    "Without skip connections, the decoder must reconstruct everything from the latent, forcing meaningful compression but losing fine detail",
+    "The latent space must be useful for a downstream diffusion prior — if the latent encodes nothing, the prior has nothing to learn",
+    "Predicting 3717 block types in a space that is ~80% air creates class imbalance — the model learns to predict air conservatively",
+    "Multi-task learning with separate prediction heads can disentangle different aspects of a reconstruction (e.g., structure vs. fine detail)",
+    "Loss weighting between different objectives can prioritize one aspect of reconstruction over another",
+    "Asymmetric loss penalties can address class imbalance by penalizing one type of error more than another"
+  ],
+  "key_insight": "Abandon skip connections entirely and instead use a dual-head decoder: one binary head predicts air-vs-structure (2 classes), and a separate block head predicts the specific block type (3717 classes) only at structure locations using focal loss. Apply asymmetric loss weighting to the binary head — penalize structure-predicted-as-air 4x more than air-predicted-as-structure. This decomposition lets the binary head focus purely on geometry (solving the recall problem through asymmetric penalties) while the block head focuses on identity (using focal loss at ground-truth structure locations only). No skip connections needed because the problem decomposition reduces what each head must learn.",
+  "insight_components": [
+    "Abandon skip connections entirely — do not try to fix them, just remove them",
+    "Split prediction into binary (air/structure) head and block-type head as a problem decomposition",
+    "Apply asymmetric loss weighting to the binary head: penalize missing structure (false air) much more than over-predicting structure",
+    "Compute block-type loss only at ground-truth structure locations (focal CE), not over the whole volume"
+  ],
+  "difficulty": "medium",
+  "difficulty_rationale": "The ingredients mention multi-task heads, asymmetric penalties, and the skip connection problem separately. The insight is combining them in a specific way: dual-head decomposition (binary + block type) with asymmetric binary loss, which together solve both the latent quality problem (no skips needed) and the recall problem (asymmetric penalty). Requires connecting the class imbalance observation to the asymmetric loss idea and the multi-head decomposition.",
+  "domain": "3D voxel generation",
+  "contamination_risk": "low"
+}
