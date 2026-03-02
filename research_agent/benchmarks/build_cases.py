@@ -55,7 +55,7 @@ probing require agent-mediated tool calls.
     "authors": ["..."]
   },
   "problem_statement": "...",
-  "known_ingredients": ["...", "...", "..."],  // 3-7 items
+  "known_ingredients": ["...", "...", "..."],  // 3-8 items
   "key_insight": "...",
   "insight_components": ["...", "...", "..."],  // 3-5 items
   "difficulty": "easy|medium|hard",
@@ -122,8 +122,8 @@ def validate_case(path: pathlib.Path) -> list[str]:
             errors.append(f"Missing paper.{field}")
 
     ingredients = case.get("known_ingredients", [])
-    if not (3 <= len(ingredients) <= 7):
-        errors.append(f"known_ingredients must have 3-7 items, got {len(ingredients)}")
+    if not (3 <= len(ingredients) <= 8):
+        errors.append(f"known_ingredients must have 3-8 items, got {len(ingredients)}")
 
     components = case.get("insight_components", [])
     if not (3 <= len(components) <= 5):
