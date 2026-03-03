@@ -65,6 +65,8 @@ Also identify which question type this is:
 - **Strategic**: what phase/direction to pursue next
 - **Feasibility**: whether an approach is possible at all
 
+> **Routing note**: For **Diagnostic** and **Strategic** questions, the debate is most likely to add insight value — advocates with different epistemological frames tend to surface distinct failure modes and sequencing decisions. For **Architectural** or **Feasibility** questions, debate value comes primarily from falsification and sequencing, not the core recommendation — a single-agent answer may match the debate on insight. Set your own expectations accordingly and communicate question type to the user before proceeding.
+
 ---
 
 # STEP 1.5: QUESTION-DEBATE PRE-ROUND (DataSage Pattern)
@@ -162,21 +164,48 @@ Collect all three Round 2 positions.
 
 # STEP 4: SYNTHESIS
 
-Do NOT simply average the positions or declare a majority winner. Instead, produce a structured synthesis:
+Do NOT simply average the positions or declare a majority winner.
+
+**Pre-synthesis Contrarian check** (required before writing anything else):
+
+Ask yourself: Is the Contrarian's core argument the *prior intuitive position* arguing against a *counterintuitive claim* that is itself under debate? Look for debate questions where the premise sounds naïve or implausible on the surface (e.g., "no curation needed," "arbitrary data is sufficient," "width doesn't matter," "this simple mechanism generalizes"). In those cases, the Contrarian may be correctly identifying the intuitive prior — but that prior is precisely what the question is asking us to challenge.
+
+Flag this as **Contrarian Regression Risk** if both of these are true:
+1. The Contrarian's position is what most practitioners would assume by default (the intuitive answer)
+2. The debate question contains a claim that inverts that assumption
+
+When a Contrarian Regression Risk is flagged: require the Contrarian's position to be backed by independent empirical evidence before it shapes the synthesis. A well-argued intuitive position is insufficient to override a counterintuitive claim under debate. State the risk status explicitly (RISK FLAGGED / RISK NOT FLAGGED) before proceeding with the synthesis.
+
+Then produce a structured synthesis:
 
 **Points of genuine agreement** (what all three converge on — this is likely correct)
 
 **Points of genuine disagreement** (where frameworks produce incompatible conclusions — these need human judgment or more evidence)
 
+**Empirical Unknowns** (things the debate cannot resolve — must be measured, not argued)
+
+List any conclusions the advocates converged on as plausible but that can only be confirmed by running experiments. Discontinuous or emergent behaviors (phase transitions, capability jumps at specific thresholds) belong here by default — they cannot be derived from first principles. Do NOT include these in the Experiment Sequence or Recommended Approach as if they are established facts; they are targets for measurement.
+
 **Key insight surfaced by the debate** (something that wouldn't have emerged from a single perspective)
 
-**Recommended approach** (your synthesis recommendation, with reasoning)
+**Experiment Sequence** (the primary output — cheapest-first with kill criteria):
+
+List the action plan as a numbered sequence. For each step, specify what you are testing, what constitutes a pass, and what constitutes an abort:
+
+1. [Cheapest falsifiable test] — pass criterion: [...] — kill criterion: [what result aborts this direction]
+2. [Next step if (1) passes] — pass criterion: [...] — kill criterion: [...]
+...
+
+This sequence is the most important part of the synthesis for practical research. Prioritize speed of falsification over theoretical completeness. Each kill criterion should be specific enough to act on within one experiment.
+
+**Recommended approach** (theoretical framing for why the experiment sequence is structured this way)
 - If advocates agree: the recommendation is the consensus
 - If advocates split: explain what evidence or experiment would resolve the disagreement
 - If the Contrarian surfaced a fatal flaw: acknowledge it and revise accordingly
+- If **Contrarian Regression Risk** was flagged: state how the Contrarian's position was weighted and why
 
 **Synthesis traceability** (REQUIRED — prevents supervisor bias):
-For each element of the recommended approach, cite which advocate position it draws from using the format: `[from Empiricist R2]`, `[from Theorist R1]`, `[from Contrarian R2]`, etc. If any element of the synthesis does NOT trace to a specific advocate position, flag it explicitly as `[supervisor addition]` and justify why it was added. This ensures the synthesis faithfully represents the debate rather than injecting the supervisor's own preferences.
+For each element of the experiment sequence and recommended approach, cite which advocate position it draws from using the format: `[from Empiricist R2]`, `[from Theorist R1]`, `[from Contrarian R2]`, etc. If any element of the synthesis does NOT trace to a specific advocate position, flag it explicitly as `[supervisor addition]` and justify why it was added. This ensures the synthesis faithfully represents the debate rather than injecting the supervisor's own preferences.
 
 Example of proper traceability tagging:
 > - Use MSE-only loss without adversarial component `[from Empiricist R2]`
@@ -245,6 +274,7 @@ Full decision format for the new file:
 **Date**: [today]
 **Question**: [debate question]
 **Question Type**: [type]
+**Contrarian Regression Risk**: [FLAGGED / NOT FLAGGED — one sentence on why]
 
 ### Advocate Positions (Round 2 Final)
 - **Empiricist**: [1-2 sentence summary]
@@ -254,11 +284,19 @@ Full decision format for the new file:
 ### Key Insight
 [The thing the debate revealed that a single agent would have missed]
 
-### Decision
-[The recommendation]
+### Empirical Unknowns
+[Conclusions that are plausible but cannot be confirmed without running experiments. These are measurement targets, not established facts.]
+
+### Experiment Sequence
+1. [Cheapest falsifiable test] — pass: [...] — kill: [...]
+2. [Next step if (1) passes] — pass: [...] — kill: [...]
+[continue as needed]
+
+### Decision (Theoretical Framing)
+[Why the experiment sequence is structured this way; what each step is designed to distinguish]
 
 ### Synthesis Traceability
-[For each recommendation element: which advocate position it draws from, or "supervisor addition" if none]
+[For each element of experiment sequence and decision: which advocate position it draws from, or "supervisor addition" if none]
 
 ### Falsifier Assessment
 [Pass/Conditional/Fail + monitoring criteria]
@@ -284,7 +322,10 @@ Before producing your final output, verify every item below. If any box is unche
 
 - [ ] **Step 1.5 completed**: Pre-round was run and produced 3-5 synthesized sub-questions
 - [ ] **Sub-questions injected**: The Round 1 prompt included a non-empty KEY SUB-QUESTIONS section
-- [ ] **Traceability tags present**: Every element of the Decision section has a `[from Advocate RN]` or `[supervisor addition]` tag
+- [ ] **Contrarian Regression Risk assessed**: Explicitly stated as FLAGGED or NOT FLAGGED with a reason before synthesis
+- [ ] **Empirical Unknowns listed**: Synthesis contains a non-empty Empirical Unknowns section (or explicitly states "none" with justification)
+- [ ] **Experiment Sequence present**: Synthesis leads with a numbered experiment sequence, each step having pass and kill criteria
+- [ ] **Traceability tags present**: Every element of the Experiment Sequence and Decision section has a `[from Advocate RN]` or `[supervisor addition]` tag
 - [ ] **Step 5.5 completed**: All three advocates provided numeric failure-probability estimates (not placeholders)
 - [ ] **Calibration sum computed**: The three failure probabilities are summed and the appropriate warning status is applied (OVERCONFIDENCE / NORMAL / LOW VIABILITY)
 - [ ] **No placeholders remain**: The decision log contains no `[N%]`, `[today]`, `[short title]`, `[debate question]`, or other template placeholders
@@ -299,14 +340,17 @@ If all boxes are checked, proceed to output. If any are unchecked, fix the issue
 Your final output to the user should be:
 
 1. **Context Summary** (what you read and the current state)
-2. **Debate Question** (as framed)
+2. **Debate Question** (as framed) + **Question Type** + **Routing Note** (is debate likely to add insight value for this type?)
 3. **Key Sub-Questions** (from Step 1.5 — list each with which advocate(s) raised it)
 4. **Advocate Positions** (Round 2 summaries, one paragraph each)
-5. **Key Insight** (what the debate revealed)
-6. **Decision with Traceability** (the recommendation — each element tagged `[from Advocate RN]` or `[supervisor addition]`)
-7. **Falsifier Assessment** (what to watch for)
-8. **Overconfidence Calibration** (three failure-probability estimates + sum + warning status)
-9. **Confidence** (HIGH / MEDIUM / LOW with reason)
-10. **Next Action** (concrete step)
+5. **Contrarian Regression Risk** (FLAGGED / NOT FLAGGED + one-sentence reason)
+6. **Key Insight** (what the debate revealed)
+7. **Empirical Unknowns** (what cannot be resolved by reasoning — must be measured)
+8. **Experiment Sequence** (cheapest-first with pass/kill criteria — the primary output)
+9. **Decision with Traceability** (theoretical framing — each element tagged `[from Advocate RN]` or `[supervisor addition]`)
+10. **Falsifier Assessment** (what to watch for)
+11. **Overconfidence Calibration** (three failure-probability estimates + sum + warning status)
+12. **Confidence** (HIGH / MEDIUM / LOW with reason)
+13. **Next Action** (concrete step)
 
 Be direct. The user needs to know what to build next, not a balanced presentation of all viewpoints.
