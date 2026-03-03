@@ -96,13 +96,11 @@ All agents live in [`.claude/agents/`](.claude/agents/). Claude Code reads these
 | **research-falsifier** | Sonnet | Stress-tests the winning proposal. Identifies likely failure modes, designs kill criteria, issues GO/CONDITIONAL/NO-GO. |
 | **context-retriever** | Haiku | Takes a natural-language query, reads key files, returns a focused extract with citations (~80 lines max). Does NOT reason — retrieves only. Used by supervisor in Step 0 to avoid reading full files. |
 
-### Meta-Research Agents (optional — debates about the debate system itself)
+### Infrastructure Agent
 
-| Agent | Role |
-|-------|------|
-| **meta-research-supervisor** | Same debate structure, but applied to improving the debate system |
-| **meta-advocate-empiricist/theorist/contrarian** | Meta-debate advocates |
-| **meta-research-falsifier** | Stress-tests proposed changes to the debate system |
+| Agent | Model | Role |
+|-------|-------|------|
+| **research-organizer** | Sonnet | Audits research docs, fixes indices, flags missing/stale briefs. Run before important debates. |
 
 ---
 
@@ -123,10 +121,12 @@ your-project/
       research-advocate-contrarian.md
       research-falsifier.md
       context-retriever.md
-      [meta-agents if needed]
+      research-organizer.md
     agent-memory/
       research-supervisor/
         MEMORY.md                     # Supervisor's persistent memory (auto-updated)
+      research-organizer/
+        MEMORY.md                     # Organizer's persistent memory (audit patterns)
   research_agent/
     tools.py                          # CLI (search, read, citations, knowledge base)
     knowledge_base.json               # Structured paper storage
