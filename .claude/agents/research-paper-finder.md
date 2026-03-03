@@ -88,12 +88,52 @@ python3 research_agent/tools.py cache clear
 | Highly-cited foundational work | `search-ss` | Citation counts, venue info |
 | Year-filtered results | `search-ss --year` | Semantic Scholar supports year ranges |
 | Find code for a paper | WebSearch `"site:paperswithcode.com {title}"` or `"{arxiv_id} github"` | PapersWithCode API is defunct; WebSearch is the reliable path |
+| Analyze a GitHub repo | WebFetch on repo README + WebSearch `"site:github.com/{owner}/{repo}"` | Implementation details, hyperparams, practical gotchas papers omit |
+| Gauge real-world adoption | WebSearch `"{repo_name} github stars"` or check repo activity via WebFetch | Stars/forks/recent commits signal whether a method works in practice |
+| Find issues & discussions | WebSearch `"site:github.com/{owner}/{repo}/issues {keyword}"` | Failure modes, known limitations, community-reported problems |
 | Discover related work around a key paper | `citations --direction both` | Snowball sampling via citation graph |
 | Find what a paper builds on | `citations --direction references` | Trace intellectual lineage |
 | Find follow-up work | `citations --direction citing` | See impact and extensions |
 | Read methods/results specifically | `read --pages "4-8"` | Skip intro, get the substance |
 | See what's already researched | `kb list` / `kb stats` | Auto-indexed from docs |
 | Quick keyword search across findings | `kb search` | Search names, topics, venues, TLDRs |
+
+---
+
+# PHASE 0.5: USER-PROVIDED RESOURCE ANALYSIS
+
+If the user provides specific URLs (papers, GitHub repos, blog posts, etc.) to analyze, use this workflow instead of the standard search pipeline. Skip Phases 1.5–2.5 (search/discovery) since the user already found the resources.
+
+## Handling Different Resource Types
+
+| Resource Type | How to Read | What to Extract |
+|---------------|-------------|-----------------|
+| **arXiv paper** (arxiv.org/abs/XXXX.XXXXX) | `python3 research_agent/tools.py read "{arxiv_id}"` | Full paper analysis (see Phase 4+ for evaluation) |
+| **Other PDF/paper URL** | `WebFetch` on the URL | Same as above, but note source grade may differ |
+| **GitHub repo** | `WebFetch` on repo README, then `WebSearch` for issues/discussions | See GitHub Repo Analysis below |
+| **Blog post / article** | `WebFetch` on the URL | Key claims, referenced papers, techniques described |
+
+## GitHub Repo Analysis Template
+
+When analyzing a GitHub repo, extract:
+
+1. **Purpose & Scope**: What does this repo implement? Which paper(s) does it reference?
+2. **Architecture/Approach**: Key implementation decisions visible in README or code structure
+3. **Practical Details**: Hyperparameters, training setup, hardware requirements, dependencies
+4. **Activity & Adoption**: Stars, forks, last commit date, number of contributors
+5. **Known Issues**: Check open issues for failure modes, limitations, and community feedback (use `WebSearch "site:github.com/{owner}/{repo}/issues {relevant keywords}"`)
+6. **Deviations from Paper**: Any noted differences between the implementation and the paper it's based on
+
+## Output for User-Provided Resources
+
+Produce the same outputs as a standard research session:
+- Topic file in `research_agent/docs/`
+- Debate brief in `research_agent/docs/debate_briefs/`
+- Update `research_index.md`
+
+For each resource, include a **Relevance to Project** section connecting it to the current project phase (read `STATUS.md`).
+
+If the user provides a mix of papers and repos on the same topic, treat it as a single Type B/C analysis and synthesize across all provided resources.
 
 ---
 
@@ -209,7 +249,12 @@ Once sub-agents report back:
 1. Merge their paper lists with yours (deduplicate by title/arXiv ID)
 2. Run `citations --direction both` on the top 3-5 papers from the merged set
 3. For any paper with an arXiv ID, use `python3 research_agent/tools.py read "{arxiv_id}"` — **not WebFetch** — to read it. This caches the full text so re-reads are free.
-4. Write findings to topic files in `research_agent/docs/` — the KB auto-indexes from these
+4. **GitHub repo analysis** for top 3 papers: search for reference implementations (`WebSearch "{title} github"` or `"{arxiv_id} github"`). For repos found, check:
+   - README for implementation notes, hyperparameters, and deviations from the paper
+   - Repo activity (recent commits, stars/forks) to gauge real-world adoption
+   - Open issues for known failure modes and practical limitations
+   - Whether the code actually matches what the paper claims
+5. Write findings to topic files in `research_agent/docs/` — the KB auto-indexes from these
 
 ---
 

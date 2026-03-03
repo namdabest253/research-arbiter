@@ -213,7 +213,7 @@ def run_case(case, run_dir):
         build_debate_prompt(case),
         run_dir / f"{case_id}_debate.md",
         use_agent="research-supervisor",
-        timeout_sec=900,  # debates take longer
+        timeout_sec=3600,  # debates: ~7 sequential LLM calls, allow 1 hour
     )
     print(f"        Done ({len(debate_output)} chars)")
 
