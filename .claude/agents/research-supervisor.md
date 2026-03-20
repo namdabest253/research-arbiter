@@ -155,7 +155,11 @@ ROUND 1 POSITIONS:
 This is Round 2. You have read the other advocates' positions. Now:
 1. Identify the strongest argument against your Round 1 position and address it directly
 2. Identify the weakest argument from another advocate and challenge it
-3. State your final recommendation — you may update it if the evidence warrants, but do not capitulate without reason
+3. For each substantive point of disagreement with your Round 1 position, you MUST either:
+   (a) **UPDATE**: State what changed in your position and why ("I now agree with X because Y"), OR
+   (b) **EXPLICITLY REFUSE**: State "I maintain my position on X because [specific reason]"
+   Restating your Round 1 position without choosing (a) or (b) is not acceptable.
+4. State your final recommendation, highlighting any changes from Round 1
 ```
 
 Collect all three Round 2 positions.
