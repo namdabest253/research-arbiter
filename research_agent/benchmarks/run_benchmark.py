@@ -171,8 +171,12 @@ def parse_eval_json(raw_text):
     # Look for ```json ... ``` blocks first
     if "```json" in text:
         start = text.index("```json") + 7
-        end = text.index("```", start)
-        text = text[start:end].strip()
+        try:
+            end = text.index("```", start)
+            text = text[start:end].strip()
+        except ValueError:
+            # Unclosed code block — take everything after ```json
+            text = text[start:].strip()
 
     # Find the outermost { ... }
     try:
