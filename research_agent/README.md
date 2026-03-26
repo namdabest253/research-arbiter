@@ -49,7 +49,9 @@ research-supervisor (Opus)
   │     └── Contrarian  → surfaces blind spots, proposes concrete alternative
   │
   ├── STEP 3: Round 2 — cross-examination (3 advocates, parallel)
-  │     └── each reads all Round 1 positions, challenges the weakest, updates if warranted
+  │     └── each reads all Round 1 positions, challenges the weakest,
+  │         and for each disagreement must UPDATE or EXPLICITLY REFUSE
+  │         (no passive restatement allowed)
   │
   ├── STEP 4: Synthesis
   │     ├── points of genuine agreement
@@ -96,11 +98,19 @@ All agents live in [`.claude/agents/`](.claude/agents/). Claude Code reads these
 | **research-falsifier** | Sonnet | Stress-tests the winning proposal. Identifies likely failure modes, designs kill criteria, issues GO/CONDITIONAL/NO-GO. |
 | **context-retriever** | Haiku | Takes a natural-language query, reads key files, returns a focused extract with citations (~80 lines max). Does NOT reason — retrieves only. Used by supervisor in Step 0 to avoid reading full files. |
 
-### Infrastructure Agent
+### Infrastructure Agents
 
 | Agent | Model | Role |
 |-------|-------|------|
 | **research-organizer** | Sonnet | Audits research docs, fixes indices, flags missing/stale briefs. Run before important debates. |
+| **devlog-supervisor** | Haiku | Logs decisions, problems solved, and learnings to `docs/DEVLOG.md` for interview prep. Scoped to multi-agent system work only. |
+
+### Benchmark Variant Agents (used by format pilot — do not invoke directly)
+
+| Agent | Model | Role |
+|-------|-------|------|
+| **research-supervisor-1round** | Opus | Supervisor variant that skips Round 2 entirely. For A/B testing R2 value. |
+| **research-supervisor-format-c** | Opus | Supervisor variant with disagreement-map R2 format. For format comparison benchmarks. |
 
 ---
 
@@ -135,6 +145,7 @@ your-project/
     docs/
       research_index.md               # Index of all topic files
       metrics_registry.md             # ← Structured tables of all measured results
+      DEVLOG.md                       # Development journal (interview-ready stories)
       debates/
         index.md                      # ← 1-line-per-debate table (supervisor reads this)
         YYYY-MM-DD_slug.md            # Individual debate decisions (read selectively)
@@ -142,6 +153,13 @@ your-project/
         brief_index.md                # Maps topics → brief files
         [topic]_brief.md              # Condensed advocate-targeted brief (<200 lines)
       [topic]_papers.md               # Full research output per topic
+    benchmarks/
+      run_benchmark.py                # NRB runner (novelty recovery benchmark)
+      run_project_benchmark.py        # PDB runner (project decision benchmark)
+      run_format_pilot.py             # 3-format debate pilot runner
+      cases/                          # NRB test cases (JSON)
+      project_cases/                  # PDB test cases (pdb_001–pdb_005)
+      results/                        # Timestamped benchmark runs
     .cache/                           # Cached paper text extractions (safe to clear)
 ```
 
@@ -398,11 +416,67 @@ Add it to the "Confirmed Dead Ends" section of `STATUS.md`. Remove approaches fr
 
 ---
 
+## Benchmarking
+
+The system includes two benchmarks for measuring debate quality and a format pilot for comparing Round 2 designs.
+
+### Project Decision Benchmark (PDB)
+
+Tests whether the multi-agent debate produces better project decisions than a single agent, using 5 retrospective cases from the project's own history. Each case reconstructs a real decision point with known ground truth (confounds discovered later, good references, failed approaches).
+
+**6-criterion rubric:** Context Utilization, Confound Detection, History Anti-Repetition, Experiment Sequencing, Actionability, Scope Awareness.
+
+**Aggregate result (5 cases):** Debate composite 0.878 vs single-agent 0.806 (+7.2pp). Debate's value is specifically in preventing tunnel vision: better context utilization (+0.234) and confound detection (+0.198).
+
+```bash
+python3 research_agent/benchmarks/run_project_benchmark.py --case pdb_001
+python3 research_agent/benchmarks/run_project_benchmark.py --list
+```
+
+### 3-Format Debate Pilot
+
+Compares three Round 2 designs on a single PDB case:
+
+| Format | Description | Agent |
+|--------|-------------|-------|
+| A | 1-round only (no R2) | research-supervisor-1round |
+| B | Current 2-round defend/attack | research-supervisor |
+| C | Disagreement map + diagnostic experiments + update-or-refuse | research-supervisor-format-c |
+
+**Pilot result (pdb_001, N=1):** Formats A and B scored identically (0.917 composite). Format C scored 1.000 but didn't dominate on 2+ criteria. Inconclusive — consistent with the Falsifier's predicted failure mode at N=1.
+
+The key finding: **current defend/attack R2 adds zero measurable value on the PDB rubric** at N=1. This led to implementing the "update or explicitly refuse" protocol as a zero-cost improvement.
+
+```bash
+python3 research_agent/benchmarks/run_format_pilot.py              # run all 3 formats
+python3 research_agent/benchmarks/run_format_pilot.py --dry-run    # show prompts only
+python3 research_agent/benchmarks/run_format_pilot.py --rerun format_c --dir path/to/run
+```
+
+### Position-Change Analysis
+
+A manual analysis of R1→R2 position changes across 3 past debates (9 advocate-rounds) found:
+- Restatement rate: 33%, substantive update: 44%, mixed: 22%
+- **Asymmetric pattern:** Empiricist always updates (3/3), Contrarian never does (0/3)
+- The Contrarian's value is 100% in R1 — they propose, others adopt in R2
+
+Results: `docs/debates/2026-03-18_step1_position_change_analysis.md`
+
+### Novelty Recovery Benchmark (NRB)
+
+Tests whether debate can recover non-obvious research insights given a problem statement and known ingredients. Uses cases derived from real papers.
+
+```bash
+python3 research_agent/benchmarks/run_benchmark.py --list
+python3 research_agent/benchmarks/run_benchmark.py --case case_001
+```
+
+---
+
 ## Other Tools
 
 | Path | What |
 |------|------|
 | `research_agent/validate_debate.py` | Schema validator for debate log entries |
 | `research_agent/tests/` | Tests for the debate validator |
-| `research_agent/benchmarks/` | Benchmark suite for evaluating debate quality |
 | `research_agent/debate_viz/` | HTML visualization for debate flows |
